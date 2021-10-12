@@ -1,0 +1,28 @@
+The other thing to be aware of is that if you are using accessing the GPIO (General Purpose Input/Output) pins 
+like I'm about to demonstrate, and are using a nice Raspberry Pi Pinout guide like the nice one that Raspberry Pi Spy does, 
+the GPIO numbers are all different! So if you wanted to connect your LED to pin 15, which is GPIO22 on the Raspberry Pi, and 
+told gpio22 to turn on and off, nothing would happen! 
+
+The reason for this comes from the fact that the pins are grouped differently 
+on the CPU used on the pine64. The detail isn't important, unless you wanted to work out how to calculate it yourself. If so, 
+have at look at this post, and you'll be able to work out the formula used. Needless to say, if you've done it once, you've done it 100 times, 
+so a nice lookup table is always handy. Joey was kind enough to write up a nice reference table showing the Pine64 GPIO pin number / 
+Raspberry Pi GPIO pin numbering  / physical pin numbers. So keep that handy when you want to work out which pin is which. 
+
+longsleep also wrote a very handy script which converts the pin names (the ones like PC7 and PH5) to sysfs GPIO numbers. All you need to do 
+is download it, make it executable (chmod +x pine64-gpio-number.py) and then run it specifying the pin name as an argument... 
+
+Code:
+./pine64-gpio-number.py PC7
+
+table of PINS -> http://joey.hazlett.us/pine64/pine64_pins.html
+make PINS available -> https://forum.armbian.com/topic/10640-pine64-unable-to-export-gpio-64-67/
+
+Code:
+sudo -i
+echo "75" > /sys/class/gpio/export
+echo "out" > /sys/class/gpio/gpio75/direction
+echo 1 > /sys/class/gpio/gpio75/value
+echo 0 > /sys/class/gpio/gpio75/value
+
+https://forum.pine64.org/archive/index.php?thread-2088.html
