@@ -1,0 +1,18 @@
+$ make
+gcc -c -Wall -Oo -g evinput.c -o evinput.o
+gcc evinput.o -o evinput
+sudo chown root ./evinput
+sudo chmod u+s ./evinput
+
+$ ./evinput -h #to get help about usage
+Usage: ./evinput -g gpio [-f] [-r] [-b]
+where:
+       -f  detect rising edges
+       -r  detect falling edges
+       -b  detect both edges
+Defaults are: -g17 -b
+
+$ ./evinput -g 17 -b
+Monitoring for GPIO input changes
+($ ./evinput -g 17 -r)
+($ ./evinput -g 17 -f)
