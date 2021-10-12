@@ -1,0 +1,520 @@
+hipiblink.pl - Blink a single LED - "Hello World"
+
+hipiiotest.pl - Blink 3 LEDs, Read 2 switches, Read an encoder
+
+hipirpidebounce.pl - Debounce 2 switches
+
+hipipolledencoder.pl - Read an encoder
+
+hipicpustats.pl - Display cpu%, Memory%, temperature
+
+hipiquiskinstallation.txt - Installation notes
+
+#! /usr/bin/perl
+
+# hipiblink.pl - Blink the LED on pin 10 to figure out how to use HiPi
+# James M. Lynes, Jr. - KE4MIQ
+# Created:       June 10, 2020
+# Last Modified: 06/10/2020 - Initial version based on the HiPi Perl M
++odule
+#                                 by Mark Dootson
+#
+# Notes:         Replaces RPi::WiringPi by Steve Bertrand, WiringPi ha
++s been deprecated
+#                HiPi is a Perl library for the Raspberry Pi SBCs that
+#                    allow access to the RPi GPIO pins from Perl
+#                The pin object wrapper is similar to the RPi::WiringP
++i syntax
+
+use strict;
+use warnings;
+use HiPi qw( :rpi );
+use HiPi::GPIO;
+
+my $gpio = HiPi::GPIO->new;            # Create a GPIO object
+my $pin = $gpio->get_pin(10);          # Create a pin object(Red LED o
++n proto front panel)
+$pin->mode(RPI_MODE_OUTPUT);           # Set pinmode to output
+
+while(1) {
+    $pin->value(1);                    # LED on
+    sleep(1);
+    $pin->value(0);                    # LED off
+    sleep(1);
+}
+[download]
+#! /usr/bin/perl
+#
+# hipiiotest.pl - Test PB, Encoder, and LED Wiring  - Uses Perl HiPi D
++istribution
+#                                                     by Mark Dootson
+#
+# James M. Lynes Jr. - KE4MIQ
+# Created:       October 18,2019 - Initial test version using RPi::Wir
++ingPi
+#                                  by Steve Bertrand
+# Last Modified: 06/09/2020 - First version using HiPi
+#                06/12/2020 - Merge changes tested in hipiblink.pl
+# Target:        Raspberry Pi 3B+ and 4B in the future
+#
+# Notes:         Pin numbers below refer to the GPIO## numbers
+#                    ex: 4 -> GPIO4    17 -> GPIO17
+#
+# RPI J8 - GPIO Pin Definitions
+# -----------------------------
+#         3V3  (1) (2)  5V
+#   SDA/GPIO2  (3) (4)  5V
+#   SCL/GPIO3  (5) (6)  GND
+#   PB1/GPIO4  (7) (8)  GPIO14
+#         GND  (9) (10) GPIO15
+#  PB2/GPIO17 (11) (12) GPIO18
+# ENCA/GPIO27 (13) (14) GND
+# ENCB/GPIO22 (15) (16) GPIO23
+#         3V3 (17) (18) GPIO24
+#  RED/GPIO10 (19) (20) GND
+#  YEL/ GPIO9 (21) (22) GPIO25
+#  GRN/GPIO11 (23) (24) GPIO8
+#         GND (25) (26) GPIO7
+#       GPIO0 (27) (28) GPIO1
+#       GPIO5 (29) (30) GND
+#       GPIO6 (31) (32) GPIO12
+#      GPIO13 (33) (34) GND
+#      GPIO19 (35) (36) GPIO16
+#      GPIO26 (37) (38) GPIO20
+#         GND (39) (40) GPIO21
+
+use strict;
+use warnings;
+use HiPi qw( :rpi );
+use HiPi::GPIO;
+use Time::HiRes qw(sleep);
+
+my $gpio = HiPi::GPIO->new;            # Create a GPIO Object
+
+# Create two push button inputs
+my $pb1 = $gpio->get_pin(4);           # Create pin object for pb1
+$pb1->mode(RPI_MODE_INPUT);            # Set pin to input
+$pb1->set_pud(RPI_PUD_UP);             # Turn on internal pull-up resi
++stor
+
+my $pb2 = $gpio->get_pin(17);          # Create pin object for pb2
+$pb2->mode(RPI_MODE_INPUT);            # Set pin to input
+$pb2->set_pud(RPI_PUD_UP);             # Turn on internal pull-up resi
++stor
+
+# Create two encoder inputs
+my $enca = $gpio->get_pin(27);         # Create pin object for ENCA
+$enca->mode(RPI_MODE_INPUT);           # Set pin to input
+$enca->set_pud(RPI_PUD_UP);            # Turn on internal pull-up resi
++stor
+
+my $encb = $gpio->get_pin(22);         # Create pin object for ENCB
+$encb->mode(RPI_MODE_INPUT);           # Set pin to input
+$encb->set_pud(RPI_PUD_UP);            # Turn on internal pull-up resi
++stor
+
+# Create three LED outputs
+my $led1 = $gpio->get_pin(10);         # Red
+$led1->mode(RPI_MODE_OUTPUT);
+$led1->value(RPI_HIGH);
+
+my $led2 = $gpio->get_pin(9);          # Yellow
+$led2->mode(RPI_MODE_OUTPUT);
+$led2->value(RPI_HIGH);
+
+my $led3 = $gpio->get_pin(11);         # Green
+$led3->mode(RPI_MODE_OUTPUT);
+$led3->value(RPI_HIGH);
+
+sleep(2);                              # Leave LEDs on for two seconds
+
+$led1->value(RPI_LOW);                 # Turn the LEDs back off
+$led2->value(RPI_LOW);
+$led3->value(RPI_LOW);
+
+
+while(1) {
+
+    my $pb1v  = $pb1->value;           # Read the four input values
+    my $pb2v  = $pb2->value;
+    my $encav = $enca->value;
+    my $encbv = $encb->value;
+
+    $led1->value($encav);              # Echo encoder bits to leds
+    $led2->value($encbv);
+
+    print "PB1:  $pb1v\n";             # Print the current values
+    print "PB2:  $pb2v\n";
+    print "ENCA: $encav\n";
+    print "ENCB: $encbv\n\n";
+
+    sleep(.1);                         # Delay 100ms
+}
+[download]
+#! /usr/bin/perl
+
+# hipirpidebounce.pl - Test of switch debouncing - Perl HiPi GPIO Pack
++age
+#                          Uses Integration method
+#
+# James M. Lynes Jr. - KE4MIQ
+# Created:       October 22,2019
+# Last Modified: 06/12/2020 - Initial HiPi version
+#
+# Notes:         Multiple switch test version
+#                    From C code by Kenneth Kuhn
+#
+#                Would be called periodically to test for
+#                    and debounce switch changes. Requires "pinmax" co
++nsecutive
+#                    zeros to set "pinval" to zero. Pin is active low,
++ pulled high.
+#
+#                Tested on a RPi 3B+
+#
+# RPI J8 - GPIO Pin Definitions
+# -----------------------------
+#         3V3  (1) (2)  5V
+#   SDA/GPIO2  (3) (4)  5V
+#   SCL/GPIO3  (5) (6)  GND
+#   PB1/GPIO4  (7) (8)  GPIO14
+#         GND  (9) (10) GPIO15
+#  PB2/GPIO17 (11) (12) GPIO18
+# ENCA/GPIO27 (13) (14) GND
+# ENCB/GPIO22 (15) (16) GPIO23
+#         3V3 (17) (18) GPIO24
+#  RED/GPIO10 (19) (20) GND
+#   YEL/GPIO9 (21) (22) GPIO25
+#  GRN/GPIO11 (23) (24) GPIO8
+#         GND (25) (26) GPIO7
+#       GPIO0 (27) (28) GPIO1
+#       GPIO5 (29) (30) GND
+#       GPIO6 (31) (32) GPIO12
+#      GPIO13 (33) (34) GND
+#      GPIO19 (35) (36) GPIO16
+#      GPIO26 (37) (38) GPIO20
+#         GND (39) (40) GPIO21
+
+use strict;
+use warnings;
+use HiPi qw( :rpi );
+use HiPi::GPIO;
+use Time::HiRes qw(sleep);
+
+# Duplicate this hash for each switch/push button
+my %pin1 = (                        
+           pin       => 0,            # Current pin value(HiPi: $pin->
++value)
+           pinctr    => 0,            # Pin value accumulator
+           pinmax    => 10,           # Max value accumulation - adjus
++t as needed
+           pinval    => 1,            # Debounced value - 0 or 1
+           pinvalold => 1,            # Old debounced value - 0 or 1
+           pingpio   => 4,            # GPIO pin to read and debounce 
++- PB1
+          );
+
+my %pin2 = (                        
+           pin       => 0,            # Current pin value(HiPi: $pin->
++value)
+           pinctr    => 0,            # Pin value accumulator
+           pinmax    => 10,           # Max value accumulation - adjus
++t as needed
+           pinval    => 1,            # Debounced value - 0 or 1
+           pinvalold => 1,            # Old debounced value - 0 or 1
+           pingpio   => 17,           # GPIO pin to read and debounce 
++- PB2
+          );
+
+# Define hash pointers
+my $pin1 = \%pin1;
+my $pin2 = \%pin2;
+
+# Setup
+my $gpio = HiPi::GPIO->new;                  # Create a GPIO object
+
+# Create two push button inputs
+my $pb1 = $gpio->get_pin($pin1->{pingpio});  # Create pin object for p
++b1
+$pb1->mode(RPI_MODE_INPUT);                  # Set pin to input
+$pb1->set_pud(RPI_PUD_UP);                   # Turn on internal pull-u
++p resistor
+
+my $pb2 = $gpio->get_pin($pin2->{pingpio});  # Create pin object for p
++b2
+$pb2->mode(RPI_MODE_INPUT);                  # Set pin to input
+$pb2->set_pud(RPI_PUD_UP);                   # Turn on internal pull-u
++p resistor
+
+# Loop
+while(1) {
+
+    $pin1->{pin} = $pb1->value;              # Read pb1
+    my $pb1state = debounce($pin1);          # Debounce pb1
+    if($pb1state != $pin1->{pinvalold}) {
+        print "PB1: $pb1state\n";
+        $pin1->{pinvalold} = $pb1state;
+    }
+
+    $pin2->{pin} = $pb2->value;              # Read pb2
+    my $pb2state = debounce($pin2);          # Debounce pb2
+    if($pb2state != $pin2->{pinvalold}) {
+        print "PB2: $pb2state\n";
+        $pin2->{pinvalold} = $pb2state;
+    }
+}
+
+# Switch debounce - Integration Method
+sub debounce {
+    my($pin) = @_;                     # Reference to the specific %pi
++n hash
+    if($pin->{pin} == 0) {
+        if($pin->{pinctr} > 0) {       # Latch minimum accumulator at 
++zero
+            $pin->{pinctr}--;          # Zeros decrease the value accu
++mulator
+        }
+
+    }
+    elsif($pin->{pinctr} < $pin->{pinmax}) {
+        $pin->{pinctr}++;              # Ones increase the value accum
++ulator
+    }
+
+    if($pin->{pinctr} == 0) {
+        $pin->{pinval} = 0;            # Set value to zero when accumu
++lator goes to zero
+    }
+    elsif($pin->{pinctr} >= $pin->{pinmax}) {
+        $pin->{pinval} = 1;            # Set value to one when accumul
++ator goes to max
+        $pin->{pinctr} = $pin->{pinmax}; # Latch max accumulator at ma
++x
+    } 
+    return $pin->{pinval}; 
+}
+[download]
+#! /usr/bin/perl
+# hipipolledencoder.pl - Rotary Encoder Driver for Perl HiPi RPi GPIO 
++Package
+#
+# James M. Lynes Jr. - KE4MIQ
+# Created:         November 19,2019 - Polled encoder test version
+# Last Modified:   11/19/2019 - Remove loop delay and invert encoder b
++its
+#                  06/12/2020 - Initial port to the HiPi Package
+#
+# Notes:           Tested on a RPi 3B+
+#
+# RPI J8 - GPIO Pin Definitions
+# -----------------------------
+#         3V3  (1) (2)  5V
+#   SDA/GPIO2  (3) (4)  5V
+#   SCL/GPIO3  (5) (6)  GND
+#   PB1/GPIO4  (7) (8)  GPIO14
+#         GND  (9) (10) GPIO15
+#  PB2/GPIO17 (11) (12) GPIO18
+# ENCA/GPIO27 (13) (14) GND
+# ENCB/GPIO22 (15) (16) GPIO23
+#         3V3 (17) (18) GPIO24
+#  RED/GPIO10 (19) (20) GND
+#   YEL/GPIO9 (21) (22) GPIO25
+#  GRN/GPIO11 (23) (24) GPIO8
+#         GND (25) (26) GPIO7
+#       GPIO0 (27) (28) GPIO1
+#       GPIO5 (29) (30) GND
+#       GPIO6 (31) (32) GPIO12
+#      GPIO13 (33) (34) GND
+#      GPIO19 (35) (36) GPIO16
+#      GPIO26 (37) (38) GPIO20
+#         GND (39) (40) GPIO21
+
+use strict;
+use warnings;
+use HiPi qw( :rpi );
+use HiPi::GPIO;
+use Time::HiRes qw(sleep);
+use Data::Dumper;
+
+my $pinA = 27;                        # ENCA pin J8-13 - GPIO27
+my $pinB = 22;                        # ENCB pin J8-15 - GPIO22
+my $value = 7200000;                  # Current value
+my $last = 0;                         # Previous value
+my $inc = 10;                         # 1, 10, 100 Hz etc.
+
+my $gpio = HiPi::GPIO->new;           # Create a GPIO Object
+
+my $EncApin = $gpio->get_pin($pinA);  # Encoder pin A Object
+$EncApin->mode(RPI_MODE_INPUT);
+$EncApin->set_pud(RPI_PUD_UP);
+
+my $EncBpin = $gpio->get_pin($pinB);  # Encoder pin B Object
+$EncBpin->mode(RPI_MODE_INPUT);
+$EncBpin->set_pud(RPI_PUD_UP);
+
+while(1) {
+    rotary();
+    print "Value: $value\n";          # Display the current value
+}
+
+sub rotary {
+    my $msb = !($EncApin->value);     # Input is active low - pulled h
++igh
+    my $lsb = !($EncBpin->value);     # So, need to invert it
+
+    my $encoded = ($msb << 1) | $lsb;
+    my $sum = ($last << 2) | $encoded;
+
+# Test for valid state transitions
+    if($sum == 0b1101 || $sum == 0b0100 || $sum == 0b0010 || $sum == 0
++b1011) {
+        $value = $value + $inc;
+    }
+    if($sum == 0b1110 || $sum == 0b0111 || $sum == 0b0001 || $sum == 0
++b1000) {
+        $value = $value - $inc;
+    }
+    $last = $encoded;
+}
+[download]
+#! /usr/bin/perl
+
+# hipicpustats.pl - Display CPU Temp, CPU Utilization, and Memory Util
++ization
+# James M. Lynes, Jr. - KE4MIQ
+# Created:       June 14, 2020
+# Last Modified: 06/14/2020 - Initial version based on the RPi::SysInf
++o distribution
+#                                 By Steve Bertrand
+#
+# Notes:         RPi::SysInfo is not dependant on RPi::WiringPi
+#                    and can be used eventhough WiringPi has been depr
++ecated.
+#                
+
+use strict;
+use warnings;
+use HiPi qw( :rpi );                   # Not used in this test code
+use HiPi::GPIO;                        # Not used in this test code
+use RPi::SysInfo;
+
+my $cpu = RPi::SysInfo->new;           # create a SysInfo Object
+
+
+while(1) {
+    print "Cpu %: $cpu->cpu_percent\n";
+    print "Mem %: $cpu->mem_percent\n";
+    print "Cpu TempC: $cpu->core_temp()\n";
+    print "Cpu TempF: $cpu->core_temp('f')\n";
+
+    sleep(3);
+}
+[download]
+Installing Quisk SDR Transceiver Software on a Raspberry Pi 3B+
+---------------------------------------------------------------
+
+James M. Lynes, Jr. - KE4MIQ
+Created:         September 18, 2019
+Last Modified:   06/09/2020 - Replace RPi::WiringPi with HiPi
+                 06/12/2020 - Added tested HiPi installation instructi
++ons
+                 06/13/2020 - Added apt update and apt full-upgrade co
++mmands
+                 06/14/2020 - Added RPi::SysInfo distribution
+
+    Extracted from a document by Jim Ahlstrom, N2ADR and extended with
+        the necessary Perl packages.
+
+    The HiPi Perl RPi GPIO Package by Mark Dootson - Requires Raspian 
++Buster
+        Supports the RPi 4B including the new 8GB RAM model
+
+    The RPi::SysInfo package is by Steve Bertrand and is not
+        dependant on RPi::WiringPi or the WiringPi library
+    
+    Tested on Raspbian Release 10 Buster / Linux 4.19.66 8/15/19
+        with NOOBS 3.2 on a 16GB SD Card and a RPi 3B+
+        as updated on 06/12/2020
+
+Update the Raspian Release(Part of the NOOBS installation process)
+------------------------------------------------------------------
+    It appears that NOOBS 3.0.1 is too big to install on an 8GB SD Car
++d.
+        (The update step ran out of space. It worked on a 32GB SD Card
++.)
+        (The update step is necessary for libpulse-dev to load properl
++y.)
+    Format(FAT32) at least a 16GB SD Card and copy the NOOBS files to
+        the root directory.
+    Note: If the NOOBS installation fails, The SD Card has to be
+          re-partitioned, re-formatted(FAT32), and re-loaded with
+          the NOOBS files. Use the Disks Utility on Ubuntu 18.04LTS.
+
+sudo apt update
+sudo apt full-upgrade                            (Fixes a File Manager
++ issue)
+
+Install Perl Packages
+---------------------
+sudo apt-get install cpanminus
+sudo apt-get install libperl-dev
+
+sudo apt-get install libmodule-build-perl         (HiPi Dependencies)
+sudo apt-get install libdevice-serialport-perl
+sudo apt-get install libfile-copy-recursive-perl
+sudo apt-get install libfile-slurp-perl
+sudo apt-get install libjson-perl
+sudo apt-get install libtry-tiny-perl
+sudo apt-get install libuniversal-require-perl
+sudo apt-get install libio-epoll-perl
+sudo apt-get install libimage-imlib2-perl
+sudo apt-get install libbit-vector-perl
+sudo apt-get install libxml-libxml-perl
+sudo apt-get install libwww-perl
+sudo cpan -i HiPi                                (Install the HiPi Pac
++kage)
+
+sudo cpanm RPi::SysInfo                          (Contains CPU%, Mem%,
++ & temp fcns)
+sudo cpanm Time::HiRes
+
+Install Quisk Packages
+----------------------
+sudo apt-get install python-wxgtk3.0
+sudo apt-get install libfftw3-dev
+sudo apt-get install libasound2-dev
+sudo apt-get install portaudio19-dev
+sudo apt-get install python-usb
+sudo apt-get install libpulse-dev
+sudo apt-get install pavucontrol
+
+Install Quisk
+-------------
+sudo -H pip install --upgrade quisk (quisk release 4.1.44)
+
+Setup Printing(Optional)
+------------------------
+sudo apt-get install cups
+sudo usermod -a -G lpadmin pi
+
+Open Chrome Browser
+    In search box enter: localhost:631        (Opens CUPS Admin page)
+    Administration->Add Printer               (Will search for availab
++le printers)
+                                              (Pick your printer and t
++ake defaults)
+    Pull up printer tab to view added printer (Should be ready to prin
++t)
+
+Enable I2C(For si5351 interface)
+--------------------------------
+Preferences->Raspberry Pi Configuration->Interfaces->I2C Enable
+
+Useful Commands
+---------------
+lsb_release -a                          (Display Raspian Release)
+uname -a                                (Display Linux Release)
+Disks                                   (Linux disk partitioning utili
++ty)
+pinout                                  (Displays the RPi Pinout table
++)
