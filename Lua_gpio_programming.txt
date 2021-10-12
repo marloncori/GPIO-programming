@@ -1,0 +1,2 @@
+https://github.com/vsergeev/lua-periphery/blob/master/docs/gpio.md
+https://funprojects.blog/2019/04/20/lua-and-raspberry-pi/
