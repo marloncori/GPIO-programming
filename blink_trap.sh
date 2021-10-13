@@ -22,7 +22,6 @@ function setPin() {
 }
 
 function finish() {
-        echo $1 >$DEV/value
         echo $GPIO >$SYS/unexport
         echo "Bye bye!"
 }
