@@ -1,4 +1,4 @@
-using feature say;
+use feature 'say';
 
 use RPi::PIGPIO;
 use RPi::PIGPIO::Device::LED;
