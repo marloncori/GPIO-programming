@@ -1,0 +1,22 @@
+using feature say;
+
+use RPi::PIGPIO;
+use RPi::PIGPIO::Device::LED;
+ 
+my $pi = RPi::PIGPIO->connect('192.168.1.10');
+my $ir_sensor = 22;
+
+$pi->set_mode($ir_sensor, PI_INPUT);
+my $led = RPi::PIGPIO::Device::LED->new($pi,17);
+
+my $state = $pi->read($ir_sensor);
+
+if($state == 1){
+  $led->off;
+  say "No object has been detected.\n";
+}
+else{
+  $led->on;
+  say "OBJECT has been detected!!!\n";
+} 
+ 
