@@ -27,7 +27,7 @@ trap("SIGINT") { throw :ctrl_c }
          puts "Object has been detected!!!"
     end
   rescue Exception
-     puts "Not printed"
+     puts "User has ended the program."
      pi.stop
    end
  end
