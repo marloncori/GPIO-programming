@@ -2,26 +2,26 @@
 
 function openGPIO
 {
-        #test if GPIO sysfs entry exists, create if necessary
-        if [ ! -e "/sys/class/gpio/gpio359" ]; then
-#               echo "DEBUG: export 359"
-                echo 359 > "/sys/class/gpio/export"
+        #test if GPIO sysfs entry exists, create if necessary, PC8 - PIN 12
+        if [ ! -e "/sys/class/gpio/gpio72" ]; then
+#               echo "DEBUG: export 72"
+                echo 72 > "/sys/class/gpio/export"
         fi
 
         #test direction is set correctly, set if necessary
-        GPIO_359_DIRECTION=$(</sys/class/gpio/gpio359/direction)
+        GPIO_72_DIRECTION=$(</sys/class/gpio/gpio72/direction)
 
-        if [ "$GPIO_359_DIRECTION" != "out" ]; then
+        if [ "$GPIO_72_DIRECTION" != "out" ]; then
 #               echo "DEBUG: direction out"
-                echo out > /sys/class/gpio/gpio359/direction
+                echo out > /sys/class/gpio/gpio72/direction
         fi
 }
 
 function closeGPIO
 {
         #turn off, unexport GPIO sysfs entry, and quit nicely
-        echo 1 > "/sys/class/gpio/gpio359/value"
-        echo 359 > "/sys/class/gpio/unexport"
+        echo 1 > "/sys/class/gpio/gpio72/value"
+        echo 72 > "/sys/class/gpio/unexport"
 }
 
 function cleanup
@@ -37,7 +37,7 @@ trap cleanup SIGHUP SIGINT SIGTERM
 openGPIO
 
 #absorb likely error from first access to GPIO value
-echo 0 | tee "/sys/class/gpio/gpio359/value" > /dev/null 2>&1
+echo 0 | tee "/sys/class/gpio/gpio72/value" > /dev/null 2>&1
 
 #momentary pause to let udev do its magic
 sleep 0.1
@@ -45,15 +45,15 @@ sleep 0.1
 #main loop
 while true
 do
-        echo 0 > "/sys/class/gpio/gpio359/value" #on
+        echo 0 > "/sys/class/gpio/gpio72/value" #on
         sleep 0.1s
-        echo 1 > "/sys/class/gpio/gpio359/value" #off
+        echo 1 > "/sys/class/gpio/gpio72/value" #off
         sleep 0.1s
-        echo 0 > "/sys/class/gpio/gpio359/value" #on
+        echo 0 > "/sys/class/gpio/gpio72/value" #on
         sleep 0.1s
-        echo 1 > "/sys/class/gpio/gpio359/value" #off
+        echo 1 > "/sys/class/gpio/gpio72/value" #off
         sleep 0.1s
-        echo 1 > "/sys/class/gpio/gpio359/value" #off
+        echo 1 > "/sys/class/gpio/gpio72/value" #off
         sleep 9.7s
 done
 
