@@ -21,6 +21,14 @@ function setPin() {
     echo $1 >$DEV/value
 }
 
+function finish() {
+        echo $1 >$DEV/value
+        echo $GPIO >$SYS/unexport
+        echo "Bye bye!"
+}
+
+trap finish SIGINT
+
 # Main loop
 while true ; do
 # or while [ 1 ] ; do
