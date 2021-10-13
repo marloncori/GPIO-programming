@@ -1,6 +1,6 @@
 #!/bin/bash
 
-#let us say I have a LED connected to RPi GPIO17
+#let us say I have a LED connected to Pine a64 GPIO 72 (RPi GPIO 18) or Pine A64 GPIO 71 (RPi GPIO 17)
 GPIO="$1"
 # variable that catches the entered arg[0] from the command line
 # when running this script I have to write the pin number which will be toggled every second.
