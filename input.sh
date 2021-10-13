@@ -5,8 +5,8 @@
 # active sense: 0=active high, 1=active low (default 0)
 # when running this script write like this ./input 25 17 0
 
-INPUT="${1:-25}" # read from GPIO25 (GEN6)
-OUTPUT="${2:-17}" # write to GPIO17 (GEN5)
+INPUT="${1:-76}" # read from GPIO 76 (PC12, PIN 15)
+OUTPUT="${2:-71}" # write to GPIO 71 (PC7, PIN 13)
 ACT_LOW="${3:-0}"  # 1 = active low, else 0
 # arguments
 
