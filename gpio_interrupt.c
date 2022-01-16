@@ -191,26 +191,33 @@ int main(int argc, char **argv, char **envp)
 {
 	struct pollfd fdset[2];
 	int nfds = 2;
-	int gpio_fd, timeout, rc;
+	int gpio_fd, timeout;
+	int led_fd, rc;
 	char *buf[MAX_BUF];
-	unsigned int gpio;
+	unsigned int gpio, led;
 	int len;
 
 
 
 	if (argc < 2) {
-		printf("Usage: gpio-int <gpio-pin>\n\n");
+		printf("Usage: gpio-int <input gpio-pin> <output gpio pin>\n\n");
 		printf("Waits for a change in the GPIO pin voltage level or input on stdin\n");
 		exit(-1);
 	}
-
+        //sensor
 	gpio = atoi(argv[1]);
-
+        led = atoi(argv[2]);
+	
 	gpio_export(gpio);
 	gpio_set_dir(gpio, 0);
 	gpio_set_edge(gpio, "rising");
 	gpio_fd = gpio_fd_open(gpio);
 
+	gpio_export(led);
+	gpio_set_dir(led, 1);
+	gpio_set_value(led, 0);
+	led_fd = gpio_fd_open(led);
+	
 	timeout = POLL_TIMEOUT;
  
 	while (1) {
@@ -231,12 +238,21 @@ int main(int argc, char **argv, char **envp)
       
 		if (rc == 0) {
 			printf(".");
+			printf("\n--------------------------------------------------------------");
+			prinft("\tLED is off. Nothing has been spotted by the sensor.");
+			printf("---------------------------------------------------------------");
 		}
             
 		if (fdset[1].revents & POLLPRI) {
 			lseek(fdset[1].fd, 0, SEEK_SET);
 			len = read(fdset[1].fd, buf, MAX_BUF);
-			printf("\npoll() GPIO %d interrupt occurred\n", gpio);
+			printf("\n===============================================");
+			printf("   poll() GPIO %d interrupt occurred\n", gpio);
+			gpio_set_value(led, 1);
+			printf("=================================================");
+			printf("\n\tSomething has been detected!");
+			printf("\t\t LED is on!");
+			printf("==================================================");
 		}
 
 		if (fdset[0].revents & POLLIN) {
@@ -248,5 +264,7 @@ int main(int argc, char **argv, char **envp)
 	}
 
 	gpio_fd_close(gpio_fd);
+	gpio_fd_close(led_fd);
+	
 	return 0;
 }
